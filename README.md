@@ -5,4 +5,4 @@ A school project that uses OpenCV to capture four images from a webcam and combi
 ![GitHub stars](https://img.shields.io/github/stars/magn9566/p5kode?style=for-the-badge&logo=github)
 ![GitHub forks](https://img.shields.io/github/forks/magn9566/p5kode?style=for-the-badge&logo=github)
 ![GitHub issues](https://img.shields.io/github/issues/magn9566/p5kode?style=for-the-badge&logo=github)
-![Last Commit](https://img.shields.io/github/last-commit/magn9566/p5kode?style=flat-square)
+![Last commit](https://img.shields.io/github/last-commit/magn9566/p5kode?style=for-the-badge&logo=github)
