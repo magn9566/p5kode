@@ -1,9 +1,6 @@
 import cv2
-import csv
 import tkinter as tk
 from tkinter import font
-import serial
-import time
 import numpy as np
 import os
 from ids_peak import ids_peak
@@ -14,16 +11,6 @@ root = tk.Tk()
 root.title("pyCam")
 root.geometry("350x300")
 
-# ---- Serial ----
-
-try:
-    ser = serial.Serial("COM3", 115200, timeout=1)
-    time.sleep(2)
-    ser.reset_input_buffer()
-except serial.SerialException:
-    print("Could not open COM3. Running without serial connection.")
-    ser = None
-
 # ---- GUI variabler ----
 
 running = False
@@ -32,17 +19,13 @@ testing = False
 
 count = 0
 current_frame = None
-image_files = ["image1.png", "image2.png", "image3.png", "image4.png"]
-captured_images = [False, False, False, False]
-result_folder = r"C:\Users\Public\TcVision\Images"
-combined_image_file = os.path.join(result_folder, "combined_image.png")
-
-os.makedirs(result_folder, exist_ok=True)
+image_file = "coner.png"
+captured_image = False
 
 counterText = tk.StringVar()
 statusText = tk.StringVar()
 
-counterText.set("0/4")
+counterText.set("0/1")
 statusText.set("")
 
 # ---- Fonts ----
@@ -184,11 +167,11 @@ camera_ok = open_ids_camera()
 # ---- Counter function ----
 
 def increase_counter():
-    global count, current_frame, captured_images
+    global count, current_frame, captured_image
 
-    if count == 4:
+    if count == 1:
         count = 0
-        captured_images = [False, False, False, False]
+        captured_image = False
 
     count += 1
 
@@ -197,19 +180,12 @@ def increase_counter():
         Statuslabel.config(fg="red")
         return
 
-    filename = image_files[count - 1]
-    cv2.imwrite(filename, current_frame)
-    captured_images[count - 1] = True
+    cv2.imwrite(image_file, current_frame)
+    captured_image = True
 
-    counterText.set(f"{count}/4")
-    if all(captured_images):
-        combined = build_full_size_combined_image()
-        cv2.imwrite(combined_image_file, combined)
-        statusText.set("DONE")
-        Statuslabel.config(fg="green")
-    else:
-        statusText.set(f"Saved {filename}")
-        Statuslabel.config(fg="black")
+    counterText.set(f"{count}/1")
+    statusText.set("DONE")
+    Statuslabel.config(fg="green")
 
 # ---- GUI ----
 
@@ -276,38 +252,13 @@ def read_image_or_placeholder(filename, size, is_updated):
     return make_placeholder(filename, size)
 
 
-def read_full_size_image(filename):
-    if os.path.exists(filename):
-        return cv2.imread(filename)
-
-    return None
+def build_single_image(tile_size):
+    return read_image_or_placeholder(image_file, tile_size, captured_image)
 
 
-def build_combined_image(tile_size):
-    images = [
-        read_image_or_placeholder(filename, tile_size, captured_images[index])
-        for index, filename in enumerate(image_files)
-    ]
-
-    top = cv2.hconcat(images[:2])
-    bottom = cv2.hconcat(images[2:])
-    return cv2.vconcat([top, bottom])
-
-
-def build_full_size_combined_image():
-    images = [read_full_size_image(filename) for filename in image_files]
-
-    if any(image is None for image in images):
-        return build_combined_image((320, 240))
-
-    top = cv2.hconcat(images[:2])
-    bottom = cv2.hconcat(images[2:])
-    return cv2.vconcat([top, bottom])
-
-
-def show_combined_images(tile_size):
-    combined = build_combined_image(tile_size)
-    cv2.imshow("Combined Image", combined)
+def show_saved_image(tile_size):
+    image = build_single_image(tile_size)
+    cv2.imshow("Saved Image", image)
 
 
 def update_loop():
@@ -320,7 +271,7 @@ def update_loop():
         preview = cv2.resize(frame, (1000, 750))
         cv2.imshow("IDS Camera", preview)
 
-    show_combined_images((320, 240))
+    show_saved_image((320, 240))
     cv2.waitKey(1)
 
     # Kør update_loop igen efter 30 ms
@@ -331,8 +282,6 @@ def on_close():
     close_ids_camera()
     cv2.destroyAllWindows()
 
-    if ser is not None:
-        ser.close()
 
     root.destroy()
 
